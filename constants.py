@@ -30,6 +30,21 @@ P_TAG_RE = re.compile(r"<p[^>]*>(.*?)</p>", re.DOTALL | re.IGNORECASE)
 H_TAG_RE = re.compile(r"<h[1-6][^>]*>(.*?)</h[1-6]>", re.DOTALL | re.IGNORECASE)
 FILENAME_CLEAN_RE = re.compile(r'[<>:"/\\|?*]')
 
+# Паттерны для определения явных глав в тексте
+CHAPTER_PATTERNS = [
+    # Русские варианты
+    re.compile(r"^глава\s+\d+", re.IGNORECASE | re.MULTILINE),
+    re.compile(r"^часть\s+\d+", re.IGNORECASE | re.MULTILINE),
+    re.compile(r"^раздел\s+\d+", re.IGNORECASE | re.MULTILINE),
+    # Английские варианты
+    re.compile(r"^chapter\s+\d+", re.IGNORECASE | re.MULTILINE),
+    re.compile(r"^part\s+\d+", re.IGNORECASE | re.MULTILINE),
+    re.compile(r"^section\s+\d+", re.IGNORECASE | re.MULTILINE),
+    # Римские цифры
+    re.compile(r"^глава\s+[IVXLCDM]+", re.IGNORECASE | re.MULTILINE),
+    re.compile(r"^chapter\s+[IVXLCDM]+", re.IGNORECASE | re.MULTILINE),
+]
+
 # FB2 namespace
 FB2_NS = {"fb": "http://www.gribuser.ru/xml/fictionbook/2.0"}
 
