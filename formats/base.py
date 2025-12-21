@@ -6,6 +6,8 @@ from typing import Iterator
 class BaseBookParser(ABC):
     """Базовый класс парсера книг"""
 
+    SUPPORTED_EXTENSIONS = None
+
     def __init__(self, book_path: Path):
         self.book_path = book_path
 
@@ -23,8 +25,17 @@ class BaseBookParser(ABC):
 
         raise NotImplementedError
 
-    @classmethod
     @abstractmethod
+    def has_explicit_chapters(self) -> bool:
+        """Проверяет, есть ли в книге явная разметка на главы
+
+        Returns:
+            True если книга имеет явное разделение на главы
+        """
+
+        raise NotImplementedError
+
+    @classmethod
     def supports(cls, book_path: Path) -> bool:
         """
         Проверяет, поддерживается ли данный формат
@@ -36,4 +47,6 @@ class BaseBookParser(ABC):
             True, если поддерживается
         """
 
-        raise NotImplementedError
+        if not hasattr(cls, "SUPPORTED_EXTENSIONS"):
+            return False
+        return book_path.suffix.lower() in cls.SUPPORTED_EXTENSIONS
