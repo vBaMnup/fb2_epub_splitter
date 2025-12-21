@@ -13,7 +13,7 @@ class BaseBookParser(ABC):
             raise ValueError(f"Книга {book_path} не найдена")
 
     @abstractmethod
-    def parse(self) -> Iterator['Chapter']:
+    def parse(self) -> Iterator["Chapter"]:
         """
         Парсит книгу и возвращает итератор глав
 
@@ -37,4 +37,3 @@ class BaseBookParser(ABC):
         """
 
         raise NotImplementedError
-
