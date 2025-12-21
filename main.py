@@ -1,0 +1,1 @@
+"""This is a tool for splitting fb2 and epub books into chapters"""
