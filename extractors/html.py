@@ -1,5 +1,5 @@
 import xml.etree.ElementTree as ET
-from ..constants import STYLE_RE, SCRIPT_RE, TAG_STRIP_RE, P_TAG_RE, H_TAG_RE
+from constants import STYLE_RE, SCRIPT_RE, TAG_STRIP_RE, P_TAG_RE, H_TAG_RE
 
 
 class HtmlTextExtractor:

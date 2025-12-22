@@ -4,10 +4,10 @@ import zipfile
 from pathlib import Path
 from typing import Iterator
 
+from constants import OPF_NS, CONTAINER_NS, SKIP_TITLES, CHAPTER_PATTERNS
+from extractors.html import HtmlTextExtractor
+from models import Chapter
 from .base import BaseBookParser
-from ..constants import OPF_NS, CONTAINER_NS, SKIP_TITLES
-from ..extractors.html import HtmlTextExtractor
-from ..models import Chapter
 
 
 class EPUBParser(BaseBookParser):
@@ -18,15 +18,45 @@ class EPUBParser(BaseBookParser):
     def __init__(self, book_path: Path):
         super().__init__(book_path)
         self.html_extractor = HtmlTextExtractor()
+        self._full_text = None
+
+    def has_explicit_chapters(self) -> bool:
+        """Проверяет, есть ли явная разметка глав в тексте"""
+        if self._full_text is None:
+            self._full_text = self._extract_full_text()
+
+        # Проверяем наличие паттернов глав
+        chapter_count = 0
+        for pattern in CHAPTER_PATTERNS:
+            matches = pattern.findall(self._full_text)
+            chapter_count = max(chapter_count, len(matches))
+
+        # Считаем, что есть явные главы, если найдено 2+ совпадения
+        return chapter_count >= 2
+
+    def _extract_full_text(self) -> str:
+        """Извлекает весь текст из EPUB для анализа"""
+        text_parts = []
+
+        with zipfile.ZipFile(self.book_path, "r") as epub:
+            opf_path = self._find_opf(epub)
+            if not opf_path:
+                return ""
+
+            chapter_paths = self._get_chapter_paths(epub, opf_path)
+
+            for chapter_path in chapter_paths[:10]:  # Проверяем первые 10 глав
+                try:
+                    html = epub.read(chapter_path).decode("utf-8")
+                    _, text = self.html_extractor.extract(html)
+                    text_parts.append(text)
+                except:
+                    continue
+
+        return "\n".join(text_parts)
 
     def parse(self) -> Iterator[Chapter]:
-        """
-        Парсит EPUB файл и возвращает главы
-
-        Returns:
-            Итератор глав
-        """
-
+        """Парсит EPUB файл и возвращает главы"""
         with zipfile.ZipFile(self.book_path, "r") as epub:
             opf_path = self._find_opf(epub)
             if not opf_path:
@@ -44,16 +74,7 @@ class EPUBParser(BaseBookParser):
                     index += 1
 
     def _find_opf(self, epub: zipfile.ZipFile) -> str | None:
-        """
-        Находит путь к файлу content.opf
-
-        Args:
-            epub: EPUB файл
-
-        Returns:
-            Путь к файлу content.opf
-        """
-
+        """Находит путь к файлу content.opf"""
         # Проверяем META-INF/container.xml
         try:
             container = epub.read("META-INF/container.xml").decode("utf-8")
@@ -72,17 +93,7 @@ class EPUBParser(BaseBookParser):
         return None
 
     def _get_chapter_paths(self, epub: zipfile.ZipFile, opf_path: str) -> list[str]:
-        """
-        Получает список путей к главам из OPF файла
-
-        Args:
-            epub: EPUB файл
-            opf_path: Путь к файлу content.opf
-
-        Returns:
-            Список путей к главам
-        """
-
+        """Получает список путей к главам из OPF файла"""
         opf_content = epub.read(opf_path).decode("utf-8")
         opf_root = ET.fromstring(opf_content)
 
@@ -118,18 +129,7 @@ class EPUBParser(BaseBookParser):
     def _parse_chapter(
         self, epub: zipfile.ZipFile, chapter_path: str, index: int
     ) -> Chapter | None:
-        """
-        Парсит одну главу EPUB
-
-        Args:
-            epub: EPUB файл
-            chapter_path: Путь к главе
-            index: Номер главы
-
-        Returns:
-            Глава
-        """
-
+        """Парсит одну главу EPUB"""
         try:
             html = epub.read(chapter_path).decode("utf-8")
             title, text = self.html_extractor.extract(html)
