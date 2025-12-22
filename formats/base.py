@@ -25,14 +25,14 @@ class BaseBookParser(ABC):
 
         raise NotImplementedError
 
-    @abstractmethod
-    def has_explicit_chapters(self) -> bool:
-        """Проверяет, есть ли в книге явная разметка на главы
+    # @abstractmethod
+    def has_textual_chapters(self) -> bool:
+        """Проверяет, есть ли в тексте маркеры глав вида:
+        'Глава 1', 'Chapter II', 'Часть первая' и т.п.
 
         Returns:
-            True если книга имеет явное разделение на главы
+            True, если есть хотя бы два совпадения
         """
-
         raise NotImplementedError
 
     @classmethod

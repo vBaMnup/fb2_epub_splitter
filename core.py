@@ -34,7 +34,7 @@ class BookSplitter:
         self.output_dir.mkdir(exist_ok=True)
 
         # Проверяем, есть ли явная разметка глав
-        has_explicit = self.parser.has_explicit_chapters()
+        has_explicit = self.parser.has_textual_chapters()
 
         if has_explicit:
             logger.info("✓ Обнаружена явная разметка глав в тексте")
