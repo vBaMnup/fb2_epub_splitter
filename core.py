@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import List
 
 from constants import MIN_CHAPTER_LENGTH, SEPARATOR
 from formats.base import BaseBookParser
@@ -23,43 +24,78 @@ class BookSplitter:
         self.output_dir = output_dir
         self.min_chapter_length = MIN_CHAPTER_LENGTH
 
-    def split(self) -> list[str]:
-        """Разбивает книгу на главы и сохраняет их
+    def split(self) -> List[str]:
+        saved_files: List[str] = []
 
-        Returns:
-            Список имен сохраненных файлов
-        """
+        # 1. Получаем базовые главы (структурные, если есть)
+        chapters = list(self.parser.parse())
 
-        # Создаем выходную директорию
-        self.output_dir.mkdir(exist_ok=True)
+        # 2. Выбор стратегии
+        if (
+            hasattr(self.parser, "has_structural_chapters")
+            and self.parser.has_structural_chapters()
+        ):
+            final_chapters = chapters
+            strategy = "STRUCTURAL"
 
-        # Проверяем, есть ли явная разметка глав
-        has_explicit = self.parser.has_textual_chapters()
+        elif (
+            hasattr(self.parser, "has_textual_chapters")
+            and self.parser.has_textual_chapters()
+        ):
+            final_chapters = self._split_by_text_markers(chapters)
+            strategy = "TEXTUAL"
 
-        if has_explicit:
-            logger.info("✓ Обнаружена явная разметка глав в тексте")
-            logger.info("  Фильтрация по минимальной длине ОТКЛЮЧЕНА")
         else:
-            logger.info("✓ Явная разметка не найдена")
-            logger.info(
-                f"  Используется фильтрация по минимальной длине ({self.min_chapter_length} символов)"
-            )
+            final_chapters = self._filter_by_length(chapters)
+            strategy = "HEURISTIC"
 
-        saved_files = []
+        logger.info(f"Выбрана стратегия разбиения: {strategy}")
 
-        for chapter in self.parser.parse():
-            # Если есть явная разметка - сохраняем все главы
-            # Если нет - проверяем минимальную длину
-            if has_explicit or chapter.is_valid(self.min_chapter_length):
-                filename = self._save_chapter(chapter)
-                saved_files.append(filename)
-                logger.info(f"  ✓ Сохранена: {filename}")
+        # 3. Сохранение
+        for chapter in final_chapters:
+            saved_files.append(self._save_chapter(chapter))
 
         return saved_files
 
-    def _save_chapter(self, chapter: Chapter) -> str:
-        """Сохраняет главу в файл"""
+    # ---------- STRATEGIES ----------
 
+    def _filter_by_length(self, chapters: List[Chapter]) -> List[Chapter]:
+        return [ch for ch in chapters if len(ch.text) >= MIN_CHAPTER_LENGTH]
+
+    def _split_by_text_markers(self, chapters: List[Chapter]) -> List[Chapter]:
+        import re
+        from constants import CHAPTER_PATTERNS
+
+        full_text = "\n".join(ch.text for ch in chapters)
+        matches = []
+
+        for pattern in CHAPTER_PATTERNS:
+            matches = list(pattern.finditer(full_text))
+            if len(matches) >= 2:
+                break
+
+        if not matches:
+            return chapters
+
+        result: List[Chapter] = []
+
+        for i, match in enumerate(matches):
+            start = match.start()
+            end = matches[i + 1].start() if i + 1 < len(matches) else len(full_text)
+
+            chunk = full_text[start:end].strip()
+            title = match.group(0).strip()
+
+            if len(chunk) < MIN_CHAPTER_LENGTH:
+                continue
+
+            result.append(Chapter(index=len(result) + 1, title=title, text=chunk))
+
+        return result
+
+    # ---------- SAVE ----------
+
+    def _save_chapter(self, chapter: Chapter) -> str:
         filename = chapter.format_filename(sanitize_filename)
         filepath = self.output_dir / filename
 
