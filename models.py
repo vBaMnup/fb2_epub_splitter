@@ -35,9 +35,7 @@ class Chapter:
             Форматированное имя файла
         """
 
-        safe_title = (
-            sanitizer.sanitize(self.title) if self.title else f"chapter_{self.index}"
-        )
+        safe_title = sanitizer(self.title) if self.title else f"chapter_{self.index}"
         return f"{self.index:03d}_{safe_title}.txt"
 
     def format_content(self, separator: str) -> str:
