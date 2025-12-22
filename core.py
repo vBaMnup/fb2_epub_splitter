@@ -25,6 +25,13 @@ class BookSplitter:
         self.min_chapter_length = MIN_CHAPTER_LENGTH
 
     def split(self) -> List[str]:
+        """
+        Разбиваем книгу на главы"
+
+        Return:
+            Список путей к сохраненным главам
+        """
+
         saved_files: List[str] = []
 
         # 1. Получаем базовые главы (структурные, если есть)
@@ -60,10 +67,29 @@ class BookSplitter:
     # ---------- STRATEGIES ----------
 
     def _filter_by_length(self, chapters: List[Chapter]) -> List[Chapter]:
+        """
+        Фильтруем главы по минимально допустимому размеру
+
+        Args:
+            chapters: Список глав
+
+        Return:
+            Отфильтрованный список глав
+        """
+
         return [ch for ch in chapters if len(ch.text) >= MIN_CHAPTER_LENGTH]
 
     def _split_by_text_markers(self, chapters: List[Chapter]) -> List[Chapter]:
-        import re
+        """
+        Разбиваем главы по текстовым маркерам
+
+        Args:
+            chapters: Список глав
+
+        Return:
+            Отфильтрованный список глав
+        """
+
         from constants import CHAPTER_PATTERNS
 
         full_text = "\n".join(ch.text for ch in chapters)
@@ -96,6 +122,16 @@ class BookSplitter:
     # ---------- SAVE ----------
 
     def _save_chapter(self, chapter: Chapter) -> str:
+        """
+        Сохраняем главу
+
+        Args:
+            chapter: Глава
+
+        Return:
+            Путь к сохраненной главе
+        """
+
         filename = chapter.format_filename(sanitize_filename)
         filepath = self.output_dir / filename
 
