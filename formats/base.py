@@ -23,9 +23,9 @@ class BaseBookParser(ABC):
             Итератор глав
         """
 
-        raise NotImplementedError
+        return Iterator
 
-    # @abstractmethod
+    @classmethod
     def has_textual_chapters(self) -> bool:
         """Проверяет, есть ли в тексте маркеры глав вида:
         'Глава 1', 'Chapter II', 'Часть первая' и т.п.
@@ -33,7 +33,8 @@ class BaseBookParser(ABC):
         Returns:
             True, если есть хотя бы два совпадения
         """
-        raise NotImplementedError
+
+        return False
 
     @classmethod
     def supports(cls, book_path: Path) -> bool:
@@ -50,3 +51,7 @@ class BaseBookParser(ABC):
         if not hasattr(cls, "SUPPORTED_EXTENSIONS"):
             return False
         return book_path.suffix.lower() in cls.SUPPORTED_EXTENSIONS
+
+    def _extract_full_text(self, max_files: int = 10, max_chars: int = 200_000):
+        """Извлекает текст из книги в одну строку"""
+        raise NotImplementedError
