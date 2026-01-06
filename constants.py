@@ -31,19 +31,25 @@ H_TAG_RE = re.compile(r"<h[1-6][^>]*>(.*?)</h[1-6]>", re.DOTALL | re.IGNORECASE)
 FILENAME_CLEAN_RE = re.compile(r'[<>:"/\\|?*]')
 
 # Паттерны для определения явных глав в тексте
-CHAPTER_PATTERNS = [
-    # Русские варианты
-    re.compile(r"^глава\s+\d+", re.IGNORECASE | re.MULTILINE),
-    re.compile(r"^часть\s+\d+", re.IGNORECASE | re.MULTILINE),
-    re.compile(r"^раздел\s+\d+", re.IGNORECASE | re.MULTILINE),
-    # Английские варианты
-    re.compile(r"^chapter\s+\d+", re.IGNORECASE | re.MULTILINE),
-    re.compile(r"^part\s+\d+", re.IGNORECASE | re.MULTILINE),
-    re.compile(r"^section\s+\d+", re.IGNORECASE | re.MULTILINE),
-    # Римские цифры
-    re.compile(r"^глава\s+[IVXLCDM]+", re.IGNORECASE | re.MULTILINE),
-    re.compile(r"^chapter\s+[IVXLCDM]+", re.IGNORECASE | re.MULTILINE),
+CHAPTER_PATTERNS_ANCHORED = [
+    re.compile(r"^\s*глава[\s.:—-]*(\d+|[IVXLCDM]+)", re.IGNORECASE | re.MULTILINE),
+    re.compile(r"^\s*часть[\s.:—-]*(\d+|[IVXLCDM]+)", re.IGNORECASE | re.MULTILINE),
+    re.compile(r"^\s*раздел[\s.:—-]*(\d+|[IVXLCDM]+)", re.IGNORECASE | re.MULTILINE),
+    re.compile(r"^\s*chapter[\s.:—-]*(\d+|[IVXLCDM]+)", re.IGNORECASE | re.MULTILINE),
+    re.compile(r"^\s*part[\s.:—-]*(\d+|[IVXLCDM]+)", re.IGNORECASE | re.MULTILINE),
+    re.compile(r"^\s*section[\s.:—-]*(\d+|[IVXLCDM]+)", re.IGNORECASE | re.MULTILINE),
 ]
+
+# Бэкап—универсальные (без ^) — на случай, если нормализация не помогла
+CHAPTER_PATTERNS_ANYWHERE = [
+    re.compile(r"глава[\s.:—-]*(\d+|[IVXLCDM]+)", re.IGNORECASE),
+    re.compile(r"часть[\s.:—-]*(\d+|[IVXLCDM]+)", re.IGNORECASE),
+    re.compile(r"раздел[\s.:—-]*(\d+|[IVXLCDM]+)", re.IGNORECASE),
+    re.compile(r"chapter[\s.:—-]*(\d+|[IVXLCDM]+)", re.IGNORECASE),
+    re.compile(r"part[\s.:—-]*(\d+|[IVXLCDM]+)", re.IGNORECASE),
+    re.compile(r"section[\s.:—-]*(\d+|[IVXLCDM]+)", re.IGNORECASE),
+]
+
 
 # FB2 namespace
 FB2_NS = {"fb": "http://www.gribuser.ru/xml/fictionbook/2.0"}

@@ -2,7 +2,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Iterator
 
-from constants import FB2_NS, SKIP_TITLES, CHAPTER_PATTERNS
+from constants import FB2_NS, SKIP_TITLES, CHAPTER_PATTERNS_ANYWHERE
 from models import Chapter
 from .base import BaseBookParser
 
@@ -56,7 +56,7 @@ class FB2Parser(BaseBookParser):
 
         full_text = "".join(self._body.itertext())
 
-        for pattern in CHAPTER_PATTERNS:
+        for pattern in CHAPTER_PATTERNS_ANYWHERE:
             matches = pattern.findall(full_text)
             if len(matches) >= 2:
                 return True
